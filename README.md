@@ -20,15 +20,15 @@ Epoching Data:
 
 Code to load and handle data:
 
-'''
+```
 import mne
-'''
+```
 
-'''
+```
 fif_file=mne.io.read_raw_fif(f'{subject}-raw.fif', preload=True)
-'''
+```
 
-'''
+```
 def load_data(subject):
     fif_file=mne.io.read_raw_fif(f'{subject}-raw.fif', preload=True)
     raw_eeg_data = fif_file.get_data()
@@ -39,7 +39,7 @@ def load_data(subject):
     
 
 fif_file, raw_eeg_data, eeg_times, channel_names = load_data('P01')
-'''
+```
 
 
 
