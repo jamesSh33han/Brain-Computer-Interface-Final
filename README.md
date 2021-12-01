@@ -43,5 +43,9 @@ fif_file, raw_eeg_data, eeg_times, channel_names = load_data('P01')
 
 
 
+Sources and Inspiration:  
+
+
+
 
 
