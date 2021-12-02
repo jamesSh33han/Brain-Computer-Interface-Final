@@ -9,10 +9,10 @@ Notes pertaining to data:
 
 - Loaded in MNE’s .fif format
 - Raw EEG, EEG sample times (in seconds), channel names, and the sampling frequency can be extracted from the file
-- Raw EEG of size (channels, time points) in our case (64, 2478166)
-- EEG sample times of length 2478166
-- 64 channels, channel names are a list of channels
-- Sampling frequency of 512 Hz
+- Raw EEG of size (channels, time points) in our case (64, 2478166) for P01
+- EEG sample times of length (sample time points) - 2478166 for P01
+- 64 channels, channel names are a list of channels - for all subjects
+- Sampling frequency of 512 Hz for all subjects 
 
 
 Epoching Data:
