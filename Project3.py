@@ -95,7 +95,7 @@ def get_frequency_spectrum(eeg_epochs, fs):
 
 
 
-def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_trial_greater_than_170bpm, channels_to_plot, channels):
+def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names):
     '''
     
 
@@ -117,24 +117,24 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_trial_greater_than_1
     None.
 
     '''
-    eeg_trials_g170bpm = eeg_epochs_fft[is_trial_greater_than_170bpm]
-    eeg_trials_l170bpm = eeg_epochs_fft[~is_trial_greater_than_170bpm]
+    target_trials = eeg_epochs_fft[is_target_event]
+    non_target_trials = eeg_epochs_fft[~is_target_event]
     
     # Calculate mean power spectra
-    mean_power_spectrum_g170 = np.mean(abs(eeg_trials_g170bpm), axis=0)**2
-    mean_power_spectrum_l170 = np.mean(abs(eeg_trials_l170bpm), axis=0)**2
+    mean_target_trials = np.mean(abs(target_trials), axis=0)**2
+    mean_non_target_trials = np.mean(abs(non_target_trials), axis=0)**2
     
     # Normalize spectrum
-    mean_power_spectrum_g170_norm = mean_power_spectrum_g170/mean_power_spectrum_g170.max(axis=1, keepdims=True)
-    mean_power_spectrum_l170_norm = mean_power_spectrum_l170/mean_power_spectrum_l170.max(axis=1, keepdims=True)
+    mean_power_spectrum_target = mean_target_trials/mean_target_trials.max(axis=1, keepdims=True)
+    mean_power_spectrum_nontarget = mean_non_target_trials/mean_non_target_trials.max(axis=1, keepdims=True)
 
     # Convert to decibels
-    power_in_db_g170 = 10*np.log10(mean_power_spectrum_g170_norm)
-    power_in_db_l170 = 10*np.log10(mean_power_spectrum_l170_norm)
+    power_in_db_g170 = 10*np.log10(mean_power_spectrum_target)
+    power_in_db_l170 = 10*np.log10(mean_power_spectrum_nontarget)
 
     # Plot mean power spectrum of 12 and 15 Hz trials
     for channel_index, channel in enumerate(channels_to_plot):
-        index_to_plot = np.where(channels==channel)[0][0]
+        index_to_plot = np.where(channel_names==channel)[0][0]
         ax1=plt.subplot(len(channels_to_plot), 1, channel_index+1)
         plt.plot(fft_frequencies,power_in_db_g170[index_to_plot], label='> 170 BPM', color='red')
         plt.plot(fft_frequencies,power_in_db_l170[index_to_plot], label='< 170 BPM', color='green')
