@@ -6,7 +6,7 @@ import Project3
 fif_file, raw_eeg_data, eeg_times, channel_names, fs = Project3.load_data('13')
 
 start_time = 0
-end_time = 5
+end_time = 1.5
 
 # filter_coefficients = make_bandpass_filter(40, 60, 1000, fs, filter_type = 'hann')
 
@@ -22,11 +22,12 @@ tempo_labels = Project3.get_tempo_labels(event_stimulus_ids)
 eeg_epochs_fft, fft_frequencies = Project3.get_frequency_spectrum(eeg_epochs, fs)
 
 
-channels_to_plot = ['TP7']
+channels_to_plot = ['Fz']
 
 
 Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names)
 
+mean_eeg, rms_eeg, std_eeg = Project3.extract_eeg_features(eeg_epochs)
 
 
 # %%

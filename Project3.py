@@ -26,6 +26,7 @@ def load_data(subject):
 def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
     eeg_epochs = np.array([])
     all_trials = mne.find_events(fif_file)
+    all_trials = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] >2000))]
     target_events = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] > 999))]
     
     
@@ -48,9 +49,9 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
 def get_event_truth_labels(all_trials):
     is_target_event = np.array([])
     for trial_index in range(len(all_trials)):
-        if all_trials[trial_index, 2] < 1000:
+        if all_trials[trial_index, 2] < 1000 :
             is_target_event = np.append(is_target_event,True)
-        else:
+        elif all_trials[trial_index, 2] < 2000 :
             is_target_event = np.append(is_target_event,False)
     return np.array(is_target_event, dtype='bool')
 
@@ -120,14 +121,17 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
     target_trials = eeg_epochs_fft[is_target_event]
     non_target_trials = eeg_epochs_fft[~is_target_event]
     
+    # mean_target_trials = eeg_epochs_fft[is_target_event]
+    # mean_non_target_trials = eeg_epochs_fft[~is_target_event]
+    
     # Calculate mean power spectra
     mean_target_trials = np.mean(abs(target_trials), axis=0)**2
     mean_non_target_trials = np.mean(abs(non_target_trials), axis=0)**2
     
-    # Normalize spectrum
     mean_power_spectrum_target = mean_target_trials/mean_target_trials.max(axis=1, keepdims=True)
     mean_power_spectrum_nontarget = mean_non_target_trials/mean_non_target_trials.max(axis=1, keepdims=True)
-
+    # power_in_db_target = 10*np.log10(mean_target_trials)
+    # power_in_db_nontarget = 10*np.log10(mean_non_target_trials)
     # Convert to decibels
     power_in_db_target = 10*np.log10(mean_power_spectrum_target)
     power_in_db_nontarget = 10*np.log10(mean_power_spectrum_nontarget)
@@ -147,12 +151,16 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
 
     
 
-# def perform_ICA(raw_fif_file):
-#     ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
-#     ica.fit(raw_fif_file)
+def perform_ICA(raw_fif_file):
+    ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+    ica.fit(raw_fif_file)
 
+def extract_eeg_features(eeg_epochs):
+    mean_eeg = np.mean(eeg_epochs, axis=2)
+    rms_eeg = np.sqrt(np.mean(eeg_epochs**2, axis=2))
+    std_eeg = np.std(eeg_epochs, axis=2)
 
-
+    return mean_eeg, rms_eeg, std_eeg
 
 
 # %%
