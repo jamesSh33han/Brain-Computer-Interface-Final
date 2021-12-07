@@ -147,20 +147,10 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_trial_greater_than_1
 
     
 
-def perform_ICA(raw_fif_file):
-    ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
-    ica.fit(raw_fif_file)
+# def perform_ICA(raw_fif_file):
+#     ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+#     ica.fit(raw_fif_file)
 
-
-
-
-
-def extract_eeg_features(eeg_epochs):
-    mean_eeg = np.mean(eeg_epochs, axis=2)
-    rms_eeg = np.sqrt(np.mean(eeg_epochs**2, axis=2))
-    std_eeg = np.std(eeg_epochs, axis=2)
-
-    return mean_eeg, rms_eeg, std_eeg
 
 
 
