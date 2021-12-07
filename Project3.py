@@ -129,15 +129,15 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
     mean_power_spectrum_nontarget = mean_non_target_trials/mean_non_target_trials.max(axis=1, keepdims=True)
 
     # Convert to decibels
-    power_in_db_g170 = 10*np.log10(mean_power_spectrum_target)
-    power_in_db_l170 = 10*np.log10(mean_power_spectrum_nontarget)
+    power_in_db_target = 10*np.log10(mean_power_spectrum_target)
+    power_in_db_nontarget = 10*np.log10(mean_power_spectrum_nontarget)
 
     # Plot mean power spectrum of 12 and 15 Hz trials
     for channel_index, channel in enumerate(channels_to_plot):
         index_to_plot = np.where(channel_names==channel)[0][0]
         ax1=plt.subplot(len(channels_to_plot), 1, channel_index+1)
-        plt.plot(fft_frequencies,power_in_db_g170[index_to_plot], label='> 170 BPM', color='red')
-        plt.plot(fft_frequencies,power_in_db_l170[index_to_plot], label='< 170 BPM', color='green')
+        plt.plot(fft_frequencies,power_in_db_target[index_to_plot], label='target', color='red')
+        plt.plot(fft_frequencies,power_in_db_nontarget[index_to_plot], label='nontarget', color='green')
         plt.legend()
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Power (dB)')
