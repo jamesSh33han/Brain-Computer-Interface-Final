@@ -72,7 +72,7 @@ def make_bandpass_filter(low_cutoff, high_cutoff, filter_order, fs, filter_type 
     plt.legend(labels2)
     plt.tight_layout()
     #Save figure
-    plt.savefig(f'hann_filter_{low_cutoff}-{high_cutoff}_order{filter_order}.png')
+    # plt.savefig(f'hann_filter_{low_cutoff}-{high_cutoff}_order{filter_order}.png')
     
     
     return filter_coefficients

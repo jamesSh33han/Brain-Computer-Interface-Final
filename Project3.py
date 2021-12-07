@@ -34,17 +34,25 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
         stimulus_id = target_events[event_index, 2]//10
         event_stimulus_ids.append(stimulus_id)
         
-    event_start_times = target_events[:, 0]
+    event_start_times = all_trials[:, 0]
     for event_start_time in event_start_times:
         start_epoch = int(event_start_time) - int(start_time*fs)
         end_epoch = int(int(event_start_time) + (end_time*fs))
         epoch_data = raw_eeg_data[:, start_epoch:end_epoch]
         eeg_epochs = np.append(eeg_epochs, epoch_data)
-    eeg_epochs = np.reshape(eeg_epochs, [len(target_events), np.size(raw_eeg_data, axis=0), int(end_time*fs)])
+    eeg_epochs = np.reshape(eeg_epochs, [len(all_trials), np.size(raw_eeg_data, axis=0), int(end_time*fs)])
     epoch_times = np.arange(0, np.size(eeg_epochs, axis=2))
     return eeg_epochs, epoch_times, target_events, all_trials, event_stimulus_ids
 
 
+def get_event_truth_labels(all_trials):
+    is_target_event = np.array([])
+    for trial_index in range(len(all_trials)):
+        if all_trials[trial_index, 2] < 1000:
+            is_target_event = np.append(is_target_event,True)
+        else:
+            is_target_event = np.append(is_target_event,False)
+    return np.array(is_target_event, dtype='bool')
 
 
 def get_tempo_labels(event_stimulus_ids):
