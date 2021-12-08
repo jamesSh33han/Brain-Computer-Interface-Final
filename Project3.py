@@ -16,18 +16,71 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 
 def load_data(subject):
-    ''''''
+    '''
+    
+
+    Parameters
+    ----------
+    subject : string of subject number (two digits)
+        DESCRIPTION.
+
+    Returns
+    -------
+    fif_file : MNE FIF file
+        DESCRIPTION.
+    raw_eeg_data : Array of size (channels, samples) - samples depend on which subject is read
+        DESCRIPTION.
+    eeg_times : Array of time points eeg samples were taken
+        DESCRIPTION.
+    channel_names: Array of channel names (each is string)
+        DESCRIPTION.
+    fs : float
+        DESCRIPTION.
+
+    '''
+
     fif_file=mne.io.read_raw_fif(f'data/P{subject}-raw.fif', preload=True)
     raw_eeg_data = fif_file.get_data()[0:64, :]
     channel_names = fif_file.ch_names[0:64]
     eeg_times = fif_file.times
     fs = fif_file.info['sfreq']
-    return fif_file, raw_eeg_data, eeg_times, np.array(channel_names), fs
+    channel_names = np.array(channel_names)
+    return fif_file, raw_eeg_data, eeg_times, channel_names, fs
     
 
 
 
 def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
+    '''
+    
+
+    Parameters
+    ----------
+    fif_file : TYPE
+        DESCRIPTION.
+    raw_eeg_data : TYPE
+        DESCRIPTION.
+    start_time : TYPE
+        DESCRIPTION.
+    end_time : TYPE
+        DESCRIPTION.
+    fs : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    eeg_epochs : TYPE
+        DESCRIPTION.
+    epoch_times : TYPE
+        DESCRIPTION.
+    target_events : TYPE
+        DESCRIPTION.
+    all_trials : TYPE
+        DESCRIPTION.
+    event_stimulus_ids : TYPE
+        DESCRIPTION.
+
+    '''
     eeg_epochs = np.array([])
     all_trials = mne.find_events(fif_file)
     all_trials = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] >2000))]
@@ -51,6 +104,20 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
 
 
 def get_event_truth_labels(all_trials):
+    '''
+    
+
+    Parameters
+    ----------
+    all_trials : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    '''
     is_target_event = np.array([])
     for trial_index in range(len(all_trials)):
         if all_trials[trial_index, 2] < 1000 :
@@ -60,41 +127,35 @@ def get_event_truth_labels(all_trials):
     return np.array(is_target_event, dtype='bool')
 
 
-def get_tempo_labels(event_stimulus_ids):
-    tempo_labels=[]
-    for stimulus_id in event_stimulus_ids:
-        if stimulus_id == 1 or stimulus_id==11:
-            tempo=212
-        elif stimulus_id == 2 or stimulus_id==12:
-            tempo=189
-        elif stimulus_id == 3 or stimulus_id==13:
-            tempo=200
-        elif stimulus_id == 4 or stimulus_id==14:
-            tempo=160
-        elif stimulus_id == 21:
-            tempo = 178
-        elif stimulus_id == 22:
-            tempo = 166
-        elif stimulus_id == 23:
-            tempo = 104
-        elif stimulus_id == 24:
-            tempo = 140
+# def get_tempo_labels(event_stimulus_ids):
+#     tempo_labels=[]
+#     for stimulus_id in event_stimulus_ids:
+#         if stimulus_id == 1 or stimulus_id==11:
+#             tempo=212
+#         elif stimulus_id == 2 or stimulus_id==12:
+#             tempo=189
+#         elif stimulus_id == 3 or stimulus_id==13:
+#             tempo=200
+#         elif stimulus_id == 4 or stimulus_id==14:
+#             tempo=160
+#         elif stimulus_id == 21:
+#             tempo = 178
+#         elif stimulus_id == 22:
+#             tempo = 166
+#         elif stimulus_id == 23:
+#             tempo = 104
+#         elif stimulus_id == 24:
+#             tempo = 140
         
-        tempo_labels.append(tempo)
-    return np.array(tempo_labels)
+#         tempo_labels.append(tempo)
+#     return np.array(tempo_labels)
 
 
 
-def get_truth_labels(tempo_labels):
-    is_trial_greater_than_170bpm = [tempo_labels[:] >= 170]
-    return is_trial_greater_than_170bpm[0]
+# def get_truth_labels(tempo_labels):
 
-
-def get_frequency_spectrum(eeg_epochs, fs):
-    eeg_epochs_fft = np.fft.rfft(eeg_epochs)
-    fft_frequencies = np.fft.rfftfreq(np.size(eeg_epochs, axis=2), d=1/fs) 
-    
-    return eeg_epochs_fft, fft_frequencies
+#     is_trial_greater_than_170bpm = [tempo_labels[:] >= 170]
+#     return is_trial_greater_than_170bpm[0]
 
 
 
@@ -125,18 +186,13 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
     target_trials = eeg_epochs_fft[is_target_event]
     non_target_trials = eeg_epochs_fft[~is_target_event]
     
-    # mean_target_trials = eeg_epochs_fft[is_target_event]
-    # mean_non_target_trials = eeg_epochs_fft[~is_target_event]
-    
     # Calculate mean power spectra
     mean_target_trials = np.mean(abs(target_trials), axis=0)**2
     mean_non_target_trials = np.mean(abs(non_target_trials), axis=0)**2
     
     mean_power_spectrum_target = mean_target_trials/mean_target_trials.max(axis=1, keepdims=True)
     mean_power_spectrum_nontarget = mean_non_target_trials/mean_non_target_trials.max(axis=1, keepdims=True)
-    # power_in_db_target = 10*np.log10(mean_target_trials)
-    # power_in_db_nontarget = 10*np.log10(mean_non_target_trials)
-    # Convert to decibels
+
     power_in_db_target = 10*np.log10(mean_power_spectrum_target)
     power_in_db_nontarget = 10*np.log10(mean_power_spectrum_nontarget)
 
@@ -152,10 +208,28 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
         plt.tight_layout()
 
         plt.grid()
+    plt.savefig(f'figures/MeanPowerSpectrumChannel{channel}')
 
     
 
 def perform_ICA(raw_fif_file, channel_names, top_n_components):
+    '''
+    
+
+    Parameters
+    ----------
+    raw_fif_file : TYPE
+        DESCRIPTION.
+    channel_names : TYPE
+        DESCRIPTION.
+    top_n_components : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    '''
     picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[0:64]
     ica = mne.preprocessing.ICA(n_components=64, random_state=97, max_iter=800)
     # picks = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False)
@@ -164,6 +238,24 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     ica.plot_components(picks = np.arange(0,top_n_components))
 
 def extract_eeg_features(eeg_epochs):
+    '''
+    
+
+    Parameters
+    ----------
+    eeg_epochs : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    mean_eeg : TYPE
+        DESCRIPTION.
+    rms_eeg : TYPE
+        DESCRIPTION.
+    std_eeg : TYPE
+        DESCRIPTION.
+
+    '''
     mean_eeg = np.mean(eeg_epochs, axis=2)
     rms_eeg = np.sqrt(np.mean(eeg_epochs**2, axis=2))
     std_eeg = np.std(eeg_epochs, axis=2)

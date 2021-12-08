@@ -1,8 +1,6 @@
 #%%
-from filter_ssvep_data import make_bandpass_filter
-from filter_ssvep_data import filter_data
+from import_ssvep_data import get_frequency_spectrum
 import Project3
-import remove_audvis_blinks
 import numpy as np
 
 fif_file, raw_eeg_data, eeg_times, channel_names, fs = Project3.load_data('13')
@@ -15,7 +13,8 @@ eeg_epochs, epoch_times, target_events, all_trials, event_stimulus_ids = Project
 
 is_target_event = Project3.get_event_truth_labels(all_trials)
 
-eeg_epochs_fft, fft_frequencies = Project3.get_frequency_spectrum(eeg_epochs, fs)
+
+eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
 
 channels_to_plot = ['Fz']
 
