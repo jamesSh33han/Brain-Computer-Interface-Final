@@ -6,7 +6,6 @@ Created on Tue Nov 30 16:36:55 2021
 """
 #%%
 import mne
-from mne.io.pick import channel_type
 import numpy as np
 import matplotlib.pyplot as plt
 from mne.preprocessing import ICA
