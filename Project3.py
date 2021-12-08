@@ -12,9 +12,6 @@ import matplotlib.pyplot as plt
 from mne.preprocessing import ICA
 
 
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
-
 def load_data(subject):
     '''
     
@@ -22,20 +19,21 @@ def load_data(subject):
     Parameters
     ----------
     subject : string of subject number (two digits)
-        DESCRIPTION.
+        String denoting which subject we are analyzing.
 
     Returns
     -------
-    fif_file : MNE FIF file
-        DESCRIPTION.
+    fif_file : Raw MNE FIF file
+        FIF file with MNE built in functions - all data can be extracted.
     raw_eeg_data : Array of size (channels, samples) - samples depend on which subject is read
-        DESCRIPTION.
+        Array of floats containing the eeg recording data taken at each time point (across all
+        trials and condiditons) for the one subject.
     eeg_times : Array of time points eeg samples were taken
-        DESCRIPTION.
+        1-D array of times (in seconds) of the time points each eeg sample was taken at.
     channel_names: Array of channel names (each is string)
-        DESCRIPTION.
+        Array of eeg channel names.
     fs : float
-        DESCRIPTION.
+        smapling frquency of 512 Hz.
 
     '''
 
@@ -56,29 +54,28 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
 
     Parameters
     ----------
-    fif_file : TYPE
-        DESCRIPTION.
-    raw_eeg_data : TYPE
-        DESCRIPTION.
-    start_time : TYPE
-        DESCRIPTION.
-    end_time : TYPE
-        DESCRIPTION.
-    fs : TYPE
-        DESCRIPTION.
+    fif_file : Raw MNE FIF file
+        FIF file with MNE built in functions - all data can be extracted.
+    raw_eeg_data : Array of size (channels, samples) - samples depend on which subject is read
+        Array of floats containing the eeg recording data taken at each time point (across all
+        trials and condiditons) for the one subject.
+    start_time : float
+        start time relative to event start.
+    end_time : float
+        end time relative to event start.
+    fs : float
+        smapling frquency of 512 Hz.
 
     Returns
     -------
-    eeg_epochs : TYPE
-        DESCRIPTION.
-    epoch_times : TYPE
-        DESCRIPTION.
-    target_events : TYPE
-        DESCRIPTION.
-    all_trials : TYPE
-        DESCRIPTION.
-    event_stimulus_ids : TYPE
-        DESCRIPTION.
+    eeg_epochs : 3-D Array of size (trials, channels, time points)
+        3-D array contianing epoched eeg data into the trials seen in the experiment.
+    epoch_times : 1-D array of length epoch time points
+        Array of times using epoch time points.
+    target_events : array of size (target_events, (event onset, post-experiment feedback, stimulus/condiiton id))
+        array containing the information on the target events (where the participant was listeing to music).
+    all_trials : array of size (all trials, (event onset, post-experiment feedback, stimulus/condiiton id))
+        array containing the information on all events.
 
     '''
     eeg_epochs = np.array([])
@@ -100,7 +97,7 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
         eeg_epochs = np.append(eeg_epochs, epoch_data)
     eeg_epochs = np.reshape(eeg_epochs, [len(all_trials), np.size(raw_eeg_data, axis=0), int(end_time*fs)])
     epoch_times = np.arange(0, np.size(eeg_epochs, axis=2))
-    return eeg_epochs, epoch_times, target_events, all_trials, event_stimulus_ids
+    return eeg_epochs, epoch_times, target_events, all_trials
 
 
 def get_event_truth_labels(all_trials):
@@ -109,13 +106,13 @@ def get_event_truth_labels(all_trials):
 
     Parameters
     ----------
-    all_trials : TYPE
-        DESCRIPTION.
+    all_trials : array of size (all trials, (event onset, post-experiment feedback, stimulus/condiiton id))
+        array containing the information on all events.
 
     Returns
     -------
-    TYPE
-        DESCRIPTION.
+    is_target_event: boolean array
+        boolean array containing labels denoting weather trial contained a target event or not.
 
     '''
     is_target_event = np.array([])
@@ -124,7 +121,8 @@ def get_event_truth_labels(all_trials):
             is_target_event = np.append(is_target_event,True)
         elif all_trials[trial_index, 2] < 2000 :
             is_target_event = np.append(is_target_event,False)
-    return np.array(is_target_event, dtype='bool')
+    is_target_event = np.array(is_target_event, dtype='bool')
+    return is_target_event
 
 
 # def get_tempo_labels(event_stimulus_ids):
@@ -208,7 +206,7 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
         plt.tight_layout()
 
         plt.grid()
-    plt.savefig(f'figures/MeanPowerSpectrumChannel{channel}')
+    plt.savefig(f'figures/MeanPowerSpectrumChannel{channel}.png')
 
     
 
@@ -218,12 +216,12 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
 
     Parameters
     ----------
-    raw_fif_file : TYPE
-        DESCRIPTION.
-    channel_names : TYPE
-        DESCRIPTION.
-    top_n_components : TYPE
-        DESCRIPTION.
+    fif_file : Raw MNE FIF file
+        FIF file with MNE built in functions - all data can be extracted.
+    channel_names: Array of channel names (each is string)
+        Array of eeg channel names.
+    top_n_components : int
+        the number of top components the user wishes to plot.
 
     Returns
     -------
@@ -236,31 +234,8 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     ica.fit(raw_fif_file, picks=picks_eeg, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
     mixing_matrix = ica.mixing_matrix_
     ica.plot_components(picks = np.arange(0,top_n_components))
+    plt.savefig(f'figures/Top{top_n_components}ICA.png')
 
-def extract_eeg_features(eeg_epochs):
-    '''
-    
-
-    Parameters
-    ----------
-    eeg_epochs : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    mean_eeg : TYPE
-        DESCRIPTION.
-    rms_eeg : TYPE
-        DESCRIPTION.
-    std_eeg : TYPE
-        DESCRIPTION.
-
-    '''
-    mean_eeg = np.mean(eeg_epochs, axis=2)
-    rms_eeg = np.sqrt(np.mean(eeg_epochs**2, axis=2))
-    std_eeg = np.std(eeg_epochs, axis=2)
-
-    return mean_eeg, rms_eeg, std_eeg
 
 
 # %%
