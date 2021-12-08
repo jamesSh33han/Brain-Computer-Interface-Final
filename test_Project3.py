@@ -23,8 +23,8 @@ Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, c
 
 mean_eeg, rms_eeg, std_eeg = Project3.extract_eeg_features(eeg_epochs)
 
-mixing_matrix = Project3.perform_ICA(fif_file, channel_names)
+top_n_components = 10
+Project3.perform_ICA(fif_file, channel_names, top_n_components)
 
-remove_audvis_blinks.plot_components(mixing_matrix, channel_names, components_to_plot=np.arange(0,10,1))
 
 # %%

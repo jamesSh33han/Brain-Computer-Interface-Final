@@ -154,14 +154,12 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
 
     
 
-def perform_ICA(raw_fif_file, channel_names):
-    # picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')
-    ica = mne.preprocessing.ICA(n_components=60, random_state=97, max_iter=800)
-    picks = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[:63]
+def perform_ICA(raw_fif_file, channel_names, top_n_components):
+    ica = mne.preprocessing.ICA(n_components=64, random_state=97, max_iter=800)
+    picks = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False)
     ica.fit(raw_fif_file, picks=picks, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
     mixing_matrix = ica.mixing_matrix_
-    ica.plot_components(np.arange(0,10))
-    return mixing_matrix
+    ica.plot_components(picks = np.arange(0,top_n_components))
 
 def extract_eeg_features(eeg_epochs):
     mean_eeg = np.mean(eeg_epochs, axis=2)
