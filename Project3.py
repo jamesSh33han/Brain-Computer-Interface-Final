@@ -6,8 +6,11 @@ Created on Tue Nov 30 16:36:55 2021
 """
 #%%
 import mne
+from mne.io.pick import channel_type
 import numpy as np
 import matplotlib.pyplot as plt
+from mne.preprocessing import ICA
+
 
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
@@ -151,9 +154,14 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
 
     
 
-def perform_ICA(raw_fif_file):
-    ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
-    ica.fit(raw_fif_file)
+def perform_ICA(raw_fif_file, channel_names):
+    # picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')
+    ica = mne.preprocessing.ICA(n_components=60, random_state=97, max_iter=800)
+    picks = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[:63]
+    ica.fit(raw_fif_file, picks=picks, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
+    mixing_matrix = ica.mixing_matrix_
+    ica.plot_components(np.arange(0,10))
+    return mixing_matrix
 
 def extract_eeg_features(eeg_epochs):
     mean_eeg = np.mean(eeg_epochs, axis=2)

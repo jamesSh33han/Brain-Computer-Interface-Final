@@ -8,9 +8,7 @@ fif_file, raw_eeg_data, eeg_times, channel_names, fs = Project3.load_data('13')
 start_time = 0
 end_time = 1.5
 
-# filter_coefficients = make_bandpass_filter(40, 60, 1000, fs, filter_type = 'hann')
 
-# filtered_data = filter_data(raw_eeg_data, filter_coefficients)
 
 eeg_epochs, epoch_times, target_events, all_trials, event_stimulus_ids = Project3.get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs)
 
@@ -29,5 +27,6 @@ Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, c
 
 mean_eeg, rms_eeg, std_eeg = Project3.extract_eeg_features(eeg_epochs)
 
+mixing_matrix = Project3.perform_ICA(fif_file, channel_names)
 
 # %%
