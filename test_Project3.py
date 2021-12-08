@@ -14,6 +14,9 @@ Some questions we have:
 from import_ssvep_data import get_frequency_spectrum
 import Project3
 import numpy as np
+import matplotlib.pyplot as plt
+
+plt.rcParams["figure.figsize"] = (14,8)
 
 fif_file, raw_eeg_data, eeg_times, channel_names, fs = Project3.load_data('13')
 
