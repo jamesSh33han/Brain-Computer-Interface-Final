@@ -16,7 +16,8 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 
 def load_data(subject):
-    fif_file=mne.io.read_raw_fif(f'P{subject}-raw.fif', preload=True)
+    ''''''
+    fif_file=mne.io.read_raw_fif(f'data/P{subject}-raw.fif', preload=True)
     raw_eeg_data = fif_file.get_data()[0:64, :]
     channel_names = fif_file.ch_names[0:64]
     eeg_times = fif_file.times
