@@ -2,19 +2,28 @@
 """
 Created on Tue Nov 30 16:36:55 2021
 
-@author: spenc
+Project3.py
+
+File that defines functions load_data, get_eeg_epochs, get_truth_event_labels, plot_power_spectrum, perform_ICA.
+These functions load in a specified subjects raw EEG data file from the OPENMIIR dataset, epochs the EEG data into
+target/nontarget epochs, defines truth event labels from the epoched data (target = true, nontarget = false), calculates
+and plots the target/nontarget mean power spectrum for a specified channel, and computes ICA on the EEG data
+
+@author: spenc, JJ
 """
-#%%
+#%% Import Statements
 import mne
 import numpy as np
 import matplotlib.pyplot as plt
 from mne.preprocessing import ICA
 
+# Define figure size
 plt.rcParams["figure.figsize"] = (14,8)
 
+#%% Loading in the data
 def load_data(subject):
     '''
-    
+    Function to load in the specified subjects .fif data file
 
     Parameters
     ----------
@@ -47,10 +56,10 @@ def load_data(subject):
     
 
 
-
+#%% Epoching the data
 def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
     '''
-    
+    Function to epoch the EEG raw data into target/nontarget epochs. 
 
     Parameters
     ----------
@@ -99,10 +108,10 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
     epoch_times = np.arange(0, np.size(eeg_epochs, axis=2))
     return eeg_epochs, epoch_times, target_events, all_trials
 
-
+#%% Setting Event Truth Labels
 def get_event_truth_labels(all_trials):
     '''
-    
+    Function to go through the data from every event and label each event as a target event (true) or a nontarget event (false)
 
     Parameters
     ----------
@@ -158,11 +167,11 @@ def get_event_truth_labels(all_trials):
 
 
 
-
+#%% Plotting Mean Power Spectrum
 def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names):
     '''
+    Function to plot calculated target/nontarget events mean power spectrum for specified channels
     
-
     Parameters
     ----------
     eeg_epochs_fft : Array of complex128
@@ -209,10 +218,10 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
     plt.savefig(f'figures/MeanPowerSpectrumChannel{channel}.png')
 
     
-
+#%% ICA
 def perform_ICA(raw_fif_file, channel_names, top_n_components):
     '''
-    
+    Function to preform ICA on the specified raw EEG data
 
     Parameters
     ----------
