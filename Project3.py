@@ -242,7 +242,8 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
 
     Returns
     -------
-    None.
+    ica : 
+        object that contains ICA data
 
     '''
     picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[0:64]
@@ -253,6 +254,7 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     ica.plot_components(picks = np.arange(0,top_n_components))
     plt.savefig(f'figures/Top{top_n_components}ICA.png')
 
+    return ica
 
 
 # %%

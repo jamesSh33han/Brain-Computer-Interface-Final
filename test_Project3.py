@@ -50,6 +50,6 @@ Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, c
 #%% Computing ICA
 top_n_components = 10
 
-Project3.perform_ICA(fif_file, channel_names, top_n_components)
+ica = Project3.perform_ICA(fif_file, channel_names, top_n_components)
 
 # %%
