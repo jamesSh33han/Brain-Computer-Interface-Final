@@ -32,7 +32,7 @@ eeg_epochs, epoch_times, all_trials = Project3.get_eeg_epochs(fif_file, raw_eeg_
 is_target_event = Project3.get_event_truth_labels(all_trials)
 
 #%% Calculating and plotting mean power spectrum for specified channels
-eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
+# eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
 
 
 # Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names)

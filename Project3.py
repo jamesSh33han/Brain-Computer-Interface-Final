@@ -229,4 +229,16 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     return ica
 
 
+
+def get_component_variance(ica, component, eeg_epochs, is_target_event):
+    mixing_matrix = ica.mixing_matrix_
+    unmixing_matrix = ica.unmixing_matrix_
+    source_activations = np.matmul(unmixing_matrix, eeg_epochs)
+    component_activation = source_activations[:, component, :]
+    target_activations = component_activation[is_target_event]
+    nontarget_activations = component_activation[~is_target_event]
+
+    
+    
+
 # %%
