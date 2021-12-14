@@ -20,7 +20,7 @@ from mne.preprocessing import ICA
 # Define figure size
 plt.rcParams["figure.figsize"] = (14,8)
 
-#%% Loading in the data
+#%% Loading in and pre-processing the data
 def load_data(subject):
     '''
     Function to load in the specified subjects .fif data file
@@ -47,6 +47,14 @@ def load_data(subject):
     '''
 
     fif_file=mne.io.read_raw_fif(f'data/P{subject}-raw.fif', preload=True)
+    
+    # pre-processing data before extraction
+    print('Band-pass filtering between 1 - 30 Hz...')
+    fif_file.filter(1,30)
+    print('Rereferencing the raw data to the average across electrodes...')
+    fif_file.set_eeg_reference(ref_channels='average')
+    
+    # extracting data
     raw_eeg_data = fif_file.get_data()[0:64, :]
     channel_names = fif_file.ch_names[0:64]
     eeg_times = fif_file.times
