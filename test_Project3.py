@@ -23,9 +23,10 @@ fif_file, raw_eeg_data, eeg_times, channel_names, fs = Project3.load_data('13')
 
 #%% Epoching the data
 start_time = 0
-end_time = 1.5
+# Explanation for end time from person behind experiemnt. A trial epoch (as I used it) starts at a trial onset marker (I used the audio onsets when available). The duration depends on what you want to do. The length of the stimuli is known but it is different for each stimulus. You can either have epochs that correspond to the full audio stimulus but vary in length (e.g. for stimulus reconstruction experiments). Or you can cut of at the length of the shortest stimulus if they need to have the same length (e.g. for stimulus recognition experiments).
+end_time = 7.6
 
-eeg_epochs, epoch_times, target_events, all_trials = Project3.get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs)
+eeg_epochs, epoch_times, all_trials = Project3.get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs)
 
 #%% Extract truth labels
 is_target_event = Project3.get_event_truth_labels(all_trials)
@@ -33,9 +34,8 @@ is_target_event = Project3.get_event_truth_labels(all_trials)
 #%% Calculating and plotting mean power spectrum for specified channels
 eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
 
-channels_to_plot = ['Fz']
 
-Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names)
+# Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names)
 
 #%% Computing ICA
 top_n_components = 10

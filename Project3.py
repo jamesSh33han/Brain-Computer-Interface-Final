@@ -97,14 +97,14 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
     '''
     eeg_epochs = np.array([])
     all_trials = mne.find_events(fif_file)
-    all_trials = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] >2000))]
-    target_events = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] > 999))]
+    all_trials = all_trials[all_trials[:, 2] <1000]
+    # target_events = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] > 999))]
     
     
-    event_stimulus_ids = []
-    for event_index in range(len(target_events)):
-        stimulus_id = target_events[event_index, 2]//10
-        event_stimulus_ids.append(stimulus_id)
+    # event_stimulus_ids = []
+    # for event_index in range(len(target_events)):
+    #     stimulus_id = target_events[event_index, 2]//10
+    #     event_stimulus_ids.append(stimulus_id)
         
     event_start_times = all_trials[:, 0]
     for event_start_time in event_start_times:
@@ -114,7 +114,7 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
         eeg_epochs = np.append(eeg_epochs, epoch_data)
     eeg_epochs = np.reshape(eeg_epochs, [len(all_trials), np.size(raw_eeg_data, axis=0), int(end_time*fs)])
     epoch_times = np.arange(0, np.size(eeg_epochs, axis=2))
-    return eeg_epochs, epoch_times, target_events, all_trials
+    return eeg_epochs, epoch_times, all_trials
 
 #%% Setting Event Truth Labels
 def get_event_truth_labels(all_trials):
@@ -134,10 +134,14 @@ def get_event_truth_labels(all_trials):
     '''
     is_target_event = np.array([])
     for trial_index in range(len(all_trials)):
-        if all_trials[trial_index, 2] < 1000 :
+        event_id = all_trials[trial_index, 2]
+        condition = event_id % 10
+        if condition == 1:
             is_target_event = np.append(is_target_event,True)
-        elif all_trials[trial_index, 2] < 2000 :
+        elif condition == 2 or condition==3 or condition == 4:
             is_target_event = np.append(is_target_event,False)
+        else:
+            pass
     is_target_event = np.array(is_target_event, dtype='bool')
     return is_target_event
 
