@@ -8,6 +8,7 @@ Link to download data by subject: http://bmi.ssc.uwo.ca/OpenMIIR-RawEEG_v1/
 Notes pertaining to data:
 
 - Loaded in MNE’s .fif format
+- Band-pass filtered and re-referenced electrode data
 - Raw EEG, EEG sample times (in seconds), channel names, and the sampling frequency can be extracted from the file
 - Raw EEG of size (channels, time points) in our case (64, 2478166) for P01
 - EEG sample times of length (sample time points) - 2478166 for P01
@@ -33,9 +34,15 @@ fif_file=mne.io.read_raw_fif(f'{subject}-raw.fif', preload=True)
 ```
 
 
-Our load_data() function that loads the fif file and extracts the data we will use. Fif file is also returned if user wants to extract different data
+Our load_data() function that loads the fif file and extracts the data we will use. Before the data is extracted from the file
+it is band-pass filtered between 1 - 30 Hz and re-referenced to the average across electrodes. Fif file is also returned if user 
+wants to extract different data.
 ```
 def load_data(subject):
+    print('Band-pass filtering between 1 - 30 Hz...')
+    fif_file.filter(1,30)
+    print('Rereferencing the raw data to the average across electrodes...')
+    fif_file.set_eeg_reference(ref_channels='average')
     fif_file=mne.io.read_raw_fif(f'{subject}-raw.fif', preload=True)
     raw_eeg_data = fif_file.get_data()
     channel_names = fif_file.ch_names[0:64]
