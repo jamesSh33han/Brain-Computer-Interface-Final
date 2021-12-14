@@ -142,38 +142,6 @@ def get_event_truth_labels(all_trials):
     return is_target_event
 
 
-# def get_tempo_labels(event_stimulus_ids):
-#     tempo_labels=[]
-#     for stimulus_id in event_stimulus_ids:
-#         if stimulus_id == 1 or stimulus_id==11:
-#             tempo=212
-#         elif stimulus_id == 2 or stimulus_id==12:
-#             tempo=189
-#         elif stimulus_id == 3 or stimulus_id==13:
-#             tempo=200
-#         elif stimulus_id == 4 or stimulus_id==14:
-#             tempo=160
-#         elif stimulus_id == 21:
-#             tempo = 178
-#         elif stimulus_id == 22:
-#             tempo = 166
-#         elif stimulus_id == 23:
-#             tempo = 104
-#         elif stimulus_id == 24:
-#             tempo = 140
-        
-#         tempo_labels.append(tempo)
-#     return np.array(tempo_labels)
-
-
-
-# def get_truth_labels(tempo_labels):
-
-#     is_trial_greater_than_170bpm = [tempo_labels[:] >= 170]
-#     return is_trial_greater_than_170bpm[0]
-
-
-
 
 #%% Plotting Mean Power Spectrum
 def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names):

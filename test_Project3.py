@@ -8,16 +8,6 @@ defined in the Project3.py file.
 
 @author: spenc, JJ
 
-Some questions we have:
-    
-    1. We are now looking at a binary classification between classifying events as target or non-target. 
-    A target event in this case is when the individual is listening to  music, and a non target one 
-    is when they are not. What we are having trouble with is extracting features that use techniques within
-    the scope of this class. Many feature selection techniques for tempo/beat and music imagry in general
-    use deep learning techniques that seem overboard for this one small subset of this project.
-    In this code we have developed some analysis and figures to begin the data exploration, but 
-    our next step is somewhat unclear. Is there any feedback or ideas you have to maybe guide
-    us in the right direction with our next step?
     
 """
 #%% Import Statements
