@@ -42,15 +42,19 @@ top_n_components = 10
 
 ica = Project3.perform_ICA(fif_file, channel_names, top_n_components)
 
-# %%
-# components = 6
 components = np.arange(0, top_n_components, 1)
 source_activations = Project3.plot_component_variance(ica, components, eeg_epochs, is_target_event)
 
 
+# %% Classification
 component = 2
-predicted_labels = Project3.make_prediction(source_activations, component, is_target_event)
+threshold = 0.0000000017
+predicted_labels = Project3.make_prediction(source_activations, component, is_target_event, threshold)
 
 truth_labels_binary = is_target_event*1
-accuracy = Project3.evaluate_predictions(predicted_labels, truth_labels_binary)
+accuracy, cm, disp = Project3.evaluate_predictions(predicted_labels, truth_labels_binary)
+disp.plot()
 
+
+
+all_accuracies, all_thresholds, all_true_positives = Project3.test_all_components_thresholds(components, source_activations, is_target_event)

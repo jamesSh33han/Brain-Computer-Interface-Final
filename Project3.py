@@ -125,12 +125,12 @@ def get_event_truth_labels(all_trials):
     Parameters
     ----------
     all_trials : array of size (all trials, (event onset, post-experiment feedback, stimulus/condiiton id))
-        array containing the information on all events.
+        array containing the information on all events (both perceived and imagined trials).
 
     Returns
     -------
     is_target_event: boolean array
-        boolean array containing labels denoting weather trial contained a target event or not.
+        boolean array containing labels denoting weather trial contained a perceived music (target) event or not.
 
     '''
     is_target_event = np.array([])
@@ -159,8 +159,8 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
         3-D array holding epoched data in the frequency domain for each trial.
     fft_frequencies : Array of float64
         Array containing the frequency corresponding to each column of the Fourier transform data.
-    is_trial_15Hz : 1-D boolean array 
-        Boolean array representing trials in which flashing at 15 Hz occurred.
+    is_target_event : 1-D boolean array 
+        Boolean array representing trials the subject perceived music vs imagined music.
     channels_to_plot : list 
         list of channels we wish to plot the raw data for.
     channels : Array of str128
@@ -247,25 +247,23 @@ def plot_component_variance(ica, components, eeg_epochs, is_target_event):
         
         
         plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
-        plt.axvline(x=0.0000000017)
     return source_activations
 # %%
 
-def make_prediction(source_activations, component, is_target_event):
+def make_prediction(source_activations, component, is_target_event, threshold):
     component_activation = source_activations[:, component, :]
     component_activation_variances = np.var(component_activation, axis = 1)
     
-    target_activation_vars = component_activation_variances[is_target_event]
-    nontarget_activation_vars = component_activation_variances[~is_target_event]
-    nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
+    # target_activation_vars = component_activation_variances[is_target_event]
+    # nontarget_activation_vars = component_activation_variances[~is_target_event]
+    # nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
     
-    plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
-    plt.axvline(x=0.0000000017)
-    
+    # plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
+    # plt.axvline(x=threshold)
     
     predicted_labels = [] 
     for variance in component_activation_variances:
-        if variance >= 0.0000000017:
+        if variance >= threshold:
             predicted_labels.append(1)
             
         else:
@@ -277,9 +275,35 @@ def evaluate_predictions(predictions, truth_labels):
     accuracy = np.mean(predictions==truth_labels)
     cm = confusion_matrix(truth_labels, predictions)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot()
-    return accuracy 
+    return accuracy, cm, disp
     
     
+
+def test_all_components_thresholds(components, source_activations, is_target_event):
+    all_accuracies = np.array([])
+    all_thresholds = np.array([])
+    all_true_positives = np.array([])
+    for component in components:
+        component_activation = source_activations[:, component, :]
+        component_activation_variances = np.var(component_activation, axis = 1)
+        # delete 238th variance, very large relatively, outlier
+        component_activation_variances = np.delete(component_activation_variances, 238)
+        min_threshold = np.min(component_activation_variances)
+        max_threshold = np.max(component_activation_variances)
+        # creates an array of thresholds based on the components range of values
+        thresholds = np.arange(min_threshold, max_threshold, (max_threshold-min_threshold)/10)
+        all_thresholds = np.append(all_thresholds, thresholds)
+        for threshold in thresholds:
+            predicted_labels = make_prediction(source_activations, component, is_target_event, threshold)
+            accuracy, cm, disp = evaluate_predictions(predicted_labels, is_target_event*1)
+            all_accuracies = np.append(all_accuracies, accuracy)
+            tp = cm[1][1]
+            all_true_positives = np.append(all_true_positives, tp)
+    all_accuracies = np.reshape(all_accuracies, (len(thresholds), len(components)))        
+    all_thresholds = np.reshape(all_thresholds, (len(thresholds), len(components)))
+    all_true_positives = np.reshape(all_true_positives, (len(thresholds), len(components)))
+    return all_accuracies, all_thresholds, all_true_positives
+        
+
     
     
