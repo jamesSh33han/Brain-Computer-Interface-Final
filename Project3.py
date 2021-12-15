@@ -306,13 +306,14 @@ def test_all_components_thresholds(components, source_activations, is_target_eve
     plt.subplot(1, 2, 1)
     plt.imshow(all_accuracies, extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'Accuracy (% Correct)', fraction=0.046, pad=0.04)
+    plt.xlabel('Threshold Index')
+    plt.ylabel('Component')
     # plt.subplot(1, 3, 2)
     # plt.plot(all_)
     plt.subplot(1, 2, 2)
     plt.imshow(all_true_positive_percentages, extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'TP %', fraction=0.046, pad=0.04)
+    plt.xlabel('Threshold Index')
+    plt.ylabel('Component')
     return all_accuracies, all_thresholds, all_true_positive_percentages
-        
-
-    
     
