@@ -17,6 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mne.preprocessing import ICA
 import math
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 # Define figure size
 plt.rcParams["figure.figsize"] = (14,8)
 
@@ -223,6 +224,7 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     ica.fit(raw_fif_file, picks=picks_eeg, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
     mixing_matrix = ica.mixing_matrix_
     ica.plot_components(picks = np.arange(0,top_n_components))
+    plt.figure('Topo')
     plt.savefig(f'figures/Top{top_n_components}ICA.png')
 
     return ica
@@ -233,7 +235,7 @@ def plot_component_variance(ica, components, eeg_epochs, is_target_event):
     mixing_matrix = ica.mixing_matrix_
     unmixing_matrix = ica.unmixing_matrix_
     source_activations = np.matmul(unmixing_matrix, eeg_epochs)
-    
+    plt.figure('variance hists')
     for component in components:
         plt.subplot(2,5,component+1)
         component_activation = source_activations[:, component, :]
@@ -243,7 +245,41 @@ def plot_component_variance(ica, components, eeg_epochs, is_target_event):
         nontarget_activation_vars = component_activation_variances[~is_target_event]
         nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
         
-    
+        
         plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
-
+        plt.axvline(x=0.0000000017)
+    return source_activations
 # %%
+
+def make_prediction(source_activations, component, is_target_event):
+    component_activation = source_activations[:, component, :]
+    component_activation_variances = np.var(component_activation, axis = 1)
+    
+    target_activation_vars = component_activation_variances[is_target_event]
+    nontarget_activation_vars = component_activation_variances[~is_target_event]
+    nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
+    
+    plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
+    plt.axvline(x=0.0000000017)
+    
+    
+    predicted_labels = [] 
+    for variance in component_activation_variances:
+        if variance >= 0.0000000017:
+            predicted_labels.append(1)
+            
+        else:
+            predicted_labels.append(0)
+            
+    return predicted_labels
+
+def evaluate_predictions(predictions, truth_labels):
+    accuracy = np.mean(predictions==truth_labels)
+    cm = confusion_matrix(truth_labels, predictions)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot()
+    return accuracy 
+    
+    
+    
+    
