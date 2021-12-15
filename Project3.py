@@ -282,7 +282,8 @@ def evaluate_predictions(predictions, truth_labels):
 def test_all_components_thresholds(components, source_activations, is_target_event):
     all_accuracies = np.array([])
     all_thresholds = np.array([])
-    all_true_positives = np.array([])
+    all_true_positive_percentages = np.array([])
+    components = components[::-1]
     for component in components:
         component_activation = source_activations[:, component, :]
         component_activation_variances = np.var(component_activation, axis = 1)
@@ -297,12 +298,20 @@ def test_all_components_thresholds(components, source_activations, is_target_eve
             predicted_labels = make_prediction(source_activations, component, is_target_event, threshold)
             accuracy, cm, disp = evaluate_predictions(predicted_labels, is_target_event*1)
             all_accuracies = np.append(all_accuracies, accuracy)
-            tp = cm[1][1]
-            all_true_positives = np.append(all_true_positives, tp)
+            tp_percent = cm[1][1]/60
+            all_true_positive_percentages = np.append(all_true_positive_percentages, tp_percent)
     all_accuracies = np.reshape(all_accuracies, (len(thresholds), len(components)))        
     all_thresholds = np.reshape(all_thresholds, (len(thresholds), len(components)))
-    all_true_positives = np.reshape(all_true_positives, (len(thresholds), len(components)))
-    return all_accuracies, all_thresholds, all_true_positives
+    all_true_positive_percentages = np.reshape(all_true_positive_percentages, (len(thresholds), len(components)))
+    plt.subplot(1, 2, 1)
+    plt.imshow(all_accuracies, extent = (components[-1], components[0], components[-1], components[0]))
+    plt.colorbar(label = 'Accuracy (% Correct)', fraction=0.046, pad=0.04)
+    # plt.subplot(1, 3, 2)
+    # plt.plot(all_)
+    plt.subplot(1, 2, 2)
+    plt.imshow(all_true_positive_percentages, extent = (components[-1], components[0], components[-1], components[0]))
+    plt.colorbar(label = 'TP %', fraction=0.046, pad=0.04)
+    return all_accuracies, all_thresholds, all_true_positive_percentages
         
 
     
