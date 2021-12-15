@@ -16,7 +16,7 @@ import mne
 import numpy as np
 import matplotlib.pyplot as plt
 from mne.preprocessing import ICA
-
+import math
 # Define figure size
 plt.rcParams["figure.figsize"] = (14,8)
 
@@ -220,7 +220,6 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     '''
     picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[0:64]
     ica = mne.preprocessing.ICA(n_components=64, random_state=97, max_iter=800)
-    # picks = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False)
     ica.fit(raw_fif_file, picks=picks_eeg, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
     mixing_matrix = ica.mixing_matrix_
     ica.plot_components(picks = np.arange(0,top_n_components))
@@ -229,16 +228,18 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     return ica
 
 
-
-def get_component_variance(ica, component, eeg_epochs, is_target_event):
+def plot_component_variance(ica, component, eeg_epochs, is_target_event):
     mixing_matrix = ica.mixing_matrix_
     unmixing_matrix = ica.unmixing_matrix_
     source_activations = np.matmul(unmixing_matrix, eeg_epochs)
     component_activation = source_activations[:, component, :]
-    target_activations = component_activation[is_target_event]
-    nontarget_activations = component_activation[~is_target_event]
+    component_activation_variances = np.var(component_activation, axis = 1)
+    
+    target_activation_vars = component_activation_variances[is_target_event]
+    nontarget_activation_vars = component_activation_variances[~is_target_event]
+    nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
+    
 
-    
-    
+    plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
 
 # %%
