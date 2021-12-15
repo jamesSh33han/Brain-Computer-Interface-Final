@@ -228,18 +228,22 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     return ica
 
 
-def plot_component_variance(ica, component, eeg_epochs, is_target_event):
+def plot_component_variance(ica, components, eeg_epochs, is_target_event):
+    
     mixing_matrix = ica.mixing_matrix_
     unmixing_matrix = ica.unmixing_matrix_
     source_activations = np.matmul(unmixing_matrix, eeg_epochs)
-    component_activation = source_activations[:, component, :]
-    component_activation_variances = np.var(component_activation, axis = 1)
     
-    target_activation_vars = component_activation_variances[is_target_event]
-    nontarget_activation_vars = component_activation_variances[~is_target_event]
-    nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
+    for component in components:
+        plt.subplot(2,5,component+1)
+        component_activation = source_activations[:, component, :]
+        component_activation_variances = np.var(component_activation, axis = 1)
+        
+        target_activation_vars = component_activation_variances[is_target_event]
+        nontarget_activation_vars = component_activation_variances[~is_target_event]
+        nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
+        
     
-
-    plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
+        plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
 
 # %%

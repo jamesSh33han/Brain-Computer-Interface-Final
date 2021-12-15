@@ -43,3 +43,6 @@ top_n_components = 10
 ica = Project3.perform_ICA(fif_file, channel_names, top_n_components)
 
 # %%
+# components = 6
+components = np.arange(0, top_n_components, 1)
+Project3.plot_component_variance(ica, components, eeg_epochs, is_target_event)
