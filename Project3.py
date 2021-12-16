@@ -103,11 +103,15 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
 
     '''
     eeg_epochs = np.array([])
+    
+    # finding all trials present in experiment
     all_trials = mne.find_events(fif_file)
+    # only using event trials (when music was perceived or imagined) - any event id under 1000 is one of the event trials
     all_trials = all_trials[all_trials[:, 2] <1000]
 
-        
+    # get all event start times    
     event_start_times = all_trials[:, 0]
+    # epoch the data based on user entered end time and start time starting at onset of trial
     for event_start_time in event_start_times:
         start_epoch = int(event_start_time) - int(start_time*fs)
         end_epoch = int(int(event_start_time) + (end_time*fs))
@@ -133,10 +137,14 @@ def get_event_truth_labels(all_trials):
         boolean array containing labels denoting weather trial contained a perceived music (target) event or not.
 
     '''
+    # initialize array
     is_target_event = np.array([])
+    # for each trial that occured, label if trial was a target (perceived music) event or not
     for trial_index in range(len(all_trials)):
+        # decode event id and condition
         event_id = all_trials[trial_index, 2]
         condition = event_id % 10
+        # if the condition 1 then it was perceived music, if not it was imagined
         if condition == 1:
             is_target_event = np.append(is_target_event,True)
         elif condition == 2 or condition==3 or condition == 4:
@@ -168,12 +176,15 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
         contains ICA data
 
     '''
+    # use only the eeg channels for fitting ICA
     picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[0:64]
+    # calculate ICA components
     ica = mne.preprocessing.ICA(n_components=64, random_state=97, max_iter=800)
+    # fit ICA 
     ica.fit(raw_fif_file, picks=picks_eeg, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
     mixing_matrix = ica.mixing_matrix_
+    # plot the components topo maps
     ica.plot_components(picks = np.arange(0,top_n_components))
-    # plt.figure('Topo')
     plt.savefig(f'figures/Top{top_n_components}ICA.png')
 
     return ica
@@ -200,20 +211,25 @@ def plot_component_variance(ica, components, eeg_epochs, is_target_event):
         Array representing source activation data from each independant component of size (trials, channels, time-course of activation)
 
     '''
+    # calc mixing and unmixing matrices
     mixing_matrix = ica.mixing_matrix_
     unmixing_matrix = ica.unmixing_matrix_
+    # calc source activations from epoched eeg data
     source_activations = np.matmul(unmixing_matrix, eeg_epochs)
     plt.figure('variance hists')
+    # for each component, plot the histogram of variances over all trials
     for component in components:
         plt.subplot(2,5,component+1)
+        # isolate one components source activity
         component_activation = source_activations[:, component, :]
+        # calc varaince of source activity
         component_activation_variances = np.var(component_activation, axis = 1)
-        
+        # break into different trial types
         target_activation_vars = component_activation_variances[is_target_event]
         nontarget_activation_vars = component_activation_variances[~is_target_event]
         nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
         
-        
+        # plot each components variances broken up by trials in a subplot
         plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
         plt.xlabel('Variance')
         plt.ylabel('Count')
@@ -251,16 +267,10 @@ def make_prediction(source_activations, component, is_target_event, threshold):
     '''
     component_activation = source_activations[:, component, :]
     component_activation_variances = np.var(component_activation, axis = 1)
-    
-    # target_activation_vars = component_activation_variances[is_target_event]
-    # nontarget_activation_vars = component_activation_variances[~is_target_event]
-    # nontarget_activation_vars = np.delete(nontarget_activation_vars, 178)
-    
-    # plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
-    # plt.axvline(x=threshold)
-    
+    # for each trial, predict weather it is perceived or imagined based on component variance
     predicted_labels = [] 
     for variance in component_activation_variances:
+        # if variance above threshold - perceived trial. Else imagined
         if variance >= threshold:
             predicted_labels.append(1)
             
@@ -292,7 +302,9 @@ def evaluate_predictions(predictions, truth_labels):
         Object to display classification results
 
     '''
+    # calc accuracy based on predicted labels and truth labels
     accuracy = np.mean(predictions==truth_labels)
+    # create confusion matrix
     cm = confusion_matrix(truth_labels, predictions)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     return accuracy, cm, disp
@@ -356,11 +368,13 @@ def test_all_components_thresholds(components, source_activations, is_target_eve
     all_thresholds = np.array([])
     all_true_positive_percentages = np.array([])
     components = components[::-1]
+    # for each component and threshold pair, calculate the accuracy, and true positives of our classifer 
     for component in components:
         component_activation = source_activations[:, component, :]
         component_activation_variances = np.var(component_activation, axis = 1)
         # delete 238th variance, very large relatively, outlier
         component_activation_variances = np.delete(component_activation_variances, 238)
+        # min and max threshold that would be viable on a certain component based on specific components variance values
         min_threshold = np.min(component_activation_variances)
         max_threshold = np.max(component_activation_variances)
         # creates an array of thresholds based on the components range of values
@@ -375,6 +389,8 @@ def test_all_components_thresholds(components, source_activations, is_target_eve
     all_accuracies = np.reshape(all_accuracies, (len(thresholds), len(components)))        
     all_thresholds = np.reshape(all_thresholds, (len(thresholds), len(components)))
     all_true_positive_percentages = np.reshape(all_true_positive_percentages, (len(thresholds), len(components)))
+    
+    # plot metrics for each component/threshold pair on pseudocolor subplots
     plt.subplot(1, 3, 1)
     plt.imshow(all_accuracies, extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'Accuracy (% Correct)', fraction=0.046, pad=0.04)
