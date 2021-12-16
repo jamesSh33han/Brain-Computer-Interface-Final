@@ -105,13 +105,7 @@ def get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs):
     eeg_epochs = np.array([])
     all_trials = mne.find_events(fif_file)
     all_trials = all_trials[all_trials[:, 2] <1000]
-    # target_events = all_trials[np.logical_not(np.logical_and(all_trials[:,2] > 20, all_trials[:,2] > 999))]
-    
-    
-    # event_stimulus_ids = []
-    # for event_index in range(len(target_events)):
-    #     stimulus_id = target_events[event_index, 2]//10
-    #     event_stimulus_ids.append(stimulus_id)
+
         
     event_start_times = all_trials[:, 0]
     for event_start_time in event_start_times:
@@ -154,57 +148,6 @@ def get_event_truth_labels(all_trials):
 
 
 
-#%% Plotting Mean Power Spectrum
-def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names):
-    '''
-    Function to plot calculated target/nontarget events mean power spectrum for specified channels
-    
-    Parameters
-    ----------
-    eeg_epochs_fft : Array of complex128
-        3-D array holding epoched data in the frequency domain for each trial.
-    fft_frequencies : Array of float64
-        Array containing the frequency corresponding to each column of the Fourier transform data.
-    is_target_event : 1-D boolean array 
-        Boolean array representing trials the subject perceived music vs imagined music.
-    channels_to_plot : list 
-        list of channels we wish to plot the raw data for.
-    channels : Array of str128
-        List of channel names from original dataset.
-
-    Returns
-    -------
-    None.
-
-    '''
-    target_trials = eeg_epochs_fft[is_target_event]
-    non_target_trials = eeg_epochs_fft[~is_target_event]
-    
-    # Calculate mean power spectra
-    mean_target_trials = np.mean(abs(target_trials), axis=0)**2
-    mean_non_target_trials = np.mean(abs(non_target_trials), axis=0)**2
-    
-    mean_power_spectrum_target = mean_target_trials/mean_target_trials.max(axis=1, keepdims=True)
-    mean_power_spectrum_nontarget = mean_non_target_trials/mean_non_target_trials.max(axis=1, keepdims=True)
-
-    power_in_db_target = 10*np.log10(mean_power_spectrum_target)
-    power_in_db_nontarget = 10*np.log10(mean_power_spectrum_nontarget)
-
-    # Plot mean power spectrum of 12 and 15 Hz trials
-    for channel_index, channel in enumerate(channels_to_plot):
-        index_to_plot = np.where(channel_names==channel)[0][0]
-        ax1=plt.subplot(len(channels_to_plot), 1, channel_index+1)
-        plt.plot(fft_frequencies,power_in_db_target[index_to_plot], label='target', color='red')
-        plt.plot(fft_frequencies,power_in_db_nontarget[index_to_plot], label='nontarget', color='green')
-        plt.legend()
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Power (dB)')
-        plt.tight_layout()
-
-        plt.grid()
-    plt.savefig(f'figures/MeanPowerSpectrumChannel{channel}.png')
-
-    
 #%% Running ICA and plotting component variance
 def perform_ICA(raw_fif_file, channel_names, top_n_components):
     '''
@@ -397,17 +340,24 @@ def test_all_components_thresholds(components, source_activations, is_target_eve
     all_accuracies = np.reshape(all_accuracies, (len(thresholds), len(components)))        
     all_thresholds = np.reshape(all_thresholds, (len(thresholds), len(components)))
     all_true_positive_percentages = np.reshape(all_true_positive_percentages, (len(thresholds), len(components)))
-    plt.subplot(1, 2, 1)
+    plt.subplot(1, 3, 1)
     plt.imshow(all_accuracies, extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'Accuracy (% Correct)', fraction=0.046, pad=0.04)
     plt.xlabel('Threshold Index')
     plt.ylabel('Component')
-    # plt.subplot(1, 3, 2)
-    # plt.plot(all_)
-    plt.subplot(1, 2, 2)
+
+    plt.subplot(1, 3, 2)
     plt.imshow(all_true_positive_percentages, extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'TP %', fraction=0.046, pad=0.04)
     plt.xlabel('Threshold Index')
     plt.ylabel('Component')
+    
+    plt.subplot(1, 3, 3)
+    plt.imshow(np.mean(np.array([all_accuracies, all_true_positive_percentages]), axis=0 ), extent = (components[-1], components[0], components[-1], components[0]))
+    plt.colorbar(label = 'Average of TP% and Accuracy', fraction=0.046, pad=0.04)
+    plt.xlabel('Threshold Index')
+    plt.ylabel('Component')
+    
+    plt.tight_layout()
     return all_accuracies, all_thresholds, all_true_positive_percentages
     

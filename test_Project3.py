@@ -31,11 +31,6 @@ eeg_epochs, epoch_times, all_trials = Project3.get_eeg_epochs(fif_file, raw_eeg_
 #%% Extract truth labels
 is_target_event = Project3.get_event_truth_labels(all_trials)
 
-#%% Calculating and plotting mean power spectrum for specified channels
-# eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
-
-
-# Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names)
 
 #%% Computing ICA and Plotting component variance
 top_n_components = 10
@@ -47,6 +42,8 @@ source_activations = Project3.plot_component_variance(ica, components, eeg_epoch
 
 
 # %% Classification
+
+# Using eye test 
 component = 2
 threshold = 0.0000000017
 predicted_labels = Project3.make_prediction(source_activations, component, is_target_event, threshold)
@@ -57,4 +54,13 @@ disp.plot()
 
 
 
-all_accuracies, all_thresholds, all_true_positives = Project3.test_all_components_thresholds(components, source_activations, is_target_event)
+all_accuracies, all_thresholds, all_true_positive_percentages = Project3.test_all_components_thresholds(components, source_activations, is_target_event)
+
+# using above results to choose component and threshold best suited as of now
+component = 6
+threshold = all_thresholds[len(components)-7, 1]
+predicted_labels = Project3.make_prediction(source_activations, component, is_target_event, threshold)
+truth_labels_binary = is_target_event*1
+accuracy, cm, disp = Project3.evaluate_predictions(predicted_labels, truth_labels_binary)
+disp.plot()
+
