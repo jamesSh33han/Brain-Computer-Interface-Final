@@ -4,10 +4,15 @@ Created on Tue Nov 30 16:36:55 2021
 
 Project3.py
 
-File that defines functions load_data, get_eeg_epochs, get_truth_event_labels, plot_power_spectrum, perform_ICA.
+File that defines functions load_data, get_eeg_epochs, get_truth_event_labels, plot_power_spectrum, perform_ICA, 
+plot_component_variance, make_prediction, evaluate_predictions, and test_all_component_thresholds.
+
 These functions load in a specified subjects raw EEG data file from the OPENMIIR dataset, epochs the EEG data into
-target/nontarget epochs, defines truth event labels from the epoched data (target = true, nontarget = false), calculates
-and plots the target/nontarget mean power spectrum for a specified channel, and computes ICA on the EEG data
+target/nontarget epochs, defines truth event labels from the epoched data (target = participant was listeing to music, 
+nontarget = participant imagined music), computes ICA on the pre-processed EEG data, plots component maps and source activity
+from ICA results, generates a list of predicted Target/Nontarget labels that are classified by using the variance of source 
+activations from a given component as features, compare predicted labels to truth labels to generate a confusion matrix, and
+compare classification accuracy across an array of different thresholds.
 
 @author: spenc, JJ
 """
@@ -21,10 +26,11 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 # Define figure size
 plt.rcParams["figure.figsize"] = (14,8)
 
-#%% Loading in and pre-processing the data
+#%% Loading in raw data, Band-pass filtering, and re-referencing
 def load_data(subject):
     '''
-    Function to load in the specified subjects .fif data file
+    Function to load in a specified subjects .fif data file, Band-pass filter the raw EEG data between 1 - 30Hz, and
+    re-reference the data to the average across electrodes.
 
     Parameters
     ----------
@@ -199,7 +205,7 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channe
     plt.savefig(f'figures/MeanPowerSpectrumChannel{channel}.png')
 
     
-#%% ICA
+#%% Running ICA and plotting component variance
 def perform_ICA(raw_fif_file, channel_names, top_n_components):
     '''
     Function to preform ICA on the specified raw EEG data
@@ -215,8 +221,8 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
 
     Returns
     -------
-    ica : 
-        object that contains ICA data
+    ica : ICA Object of mne.preprocessing.ica module
+        contains ICA data
 
     '''
     picks_eeg = mne.pick_types(raw_fif_file.info, meg=False, eeg=True, eog=False, stim=False, exclude='bads')[0:64]
@@ -231,7 +237,26 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
 
 
 def plot_component_variance(ica, components, eeg_epochs, is_target_event):
-    
+    '''
+    Function to plot component variance from ICA results
+
+    Parameters
+    ----------
+    ica : ICA Object of mne.preprocessing.ica module
+        contains ICA data
+    components : Array of int
+        Number of components to plot
+    eeg_epochs : 3-D Array of size (trials, channels, time points)
+        3-D array contianing epoched eeg data into the trials seen in the experiment.
+    is_target_event : 1-D boolean array 
+        Boolean array representing trials the subject perceived music vs imagined music.
+
+    Returns
+    -------
+    source_activations : Array of float
+        Array representing source activation data from each independant component of size (trials, channels, time-course of activation)
+
+    '''
     mixing_matrix = ica.mixing_matrix_
     unmixing_matrix = ica.unmixing_matrix_
     source_activations = np.matmul(unmixing_matrix, eeg_epochs)
@@ -248,9 +273,33 @@ def plot_component_variance(ica, components, eeg_epochs, is_target_event):
         
         plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
     return source_activations
-# %%
 
+#%% Classification of Target/Nontarget events
 def make_prediction(source_activations, component, is_target_event, threshold):
+    '''
+    Function to generate a list of predicted Target/Nontarget labels that are classified by using the variance of 
+    source activations from a given component as features. The component used to make predictions was selected by analyzing
+    the component maps and source activy generated from ICA and finding the component that most closely matches the auditory
+    N1 and P1 signals.
+
+    Parameters
+    ----------
+    source_activations : Array of float
+        Array representing source activation data from each independant component of size (trials, channels, time-course of activation)
+    component : int
+        Component that most closely matches the auditory N1 and P1. This component's source activation variance will be used to generate predictions'
+    is_target_event : 1-D boolean array 
+        Boolean array representing trials the subject perceived music vs imagined music.
+    threshold : float
+        Number to compare component activation variances to in order to determine predicted labels
+
+    Returns
+    -------
+    predicted_labels : list
+        Contains calculated prediction values. If it was predicted a subject was listening to music,  predicted_labels[i] = 1, and
+        if it was predicted a subject was imagining the music,  predicted_labels[i] = 0
+
+    '''
     component_activation = source_activations[:, component, :]
     component_activation_variances = np.var(component_activation, axis = 1)
     
@@ -272,6 +321,28 @@ def make_prediction(source_activations, component, is_target_event, threshold):
     return predicted_labels
 
 def evaluate_predictions(predictions, truth_labels):
+    '''
+    Function to compare predicted labels to truth labels to generate a confusion matrix
+
+    Parameters
+    ----------
+    predictions : List
+        Contains calculated prediction values. If it was predicted a subject was listening to music, predicted_labels[i] = 1, 
+        and if it was predicted a subject was imagining the music, predicted_labels[i] = 0
+    truth_labels : Array of int
+        Contains truth labels for whether a trial was a target (subject listening to music) or nontarget (subject imagining music)
+
+    Returns
+    -------
+    accuracy : float
+        Value to represent how accurately we classified target/nontarget labels. This value is the mean of how many times our 
+        predicted label was equal to the truth label
+    cm : Confusion Matrix
+        Object to store classification results
+    disp : Confusion Matrix
+        Object to display classification results
+
+    '''
     accuracy = np.mean(predictions==truth_labels)
     cm = confusion_matrix(truth_labels, predictions)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
@@ -280,6 +351,29 @@ def evaluate_predictions(predictions, truth_labels):
     
 
 def test_all_components_thresholds(components, source_activations, is_target_event):
+    '''
+    Function to create an array of potential thresholds based on each components range of source activation variances,
+    and then test each potential threshold to determine the threshold that gives us the highest predicted accuracy
+
+    Parameters
+    ----------
+   components : Array of int
+        Number of components to test thresholds for
+   source_activations : Array of float
+        Array representing source activation data from each independant component of size (trials, channels, time-course of activation)
+   is_target_event : 1-D boolean array 
+        Boolean array representing trials the subject perceived music vs imagined music.
+
+    Returns
+    -------
+    all_accuracies : Array of float
+        Array of calculated accuracy values with varying threshold values for each component
+    all_thresholds : Array of float
+        contains range of 10 possible threshold values for each selected component (in this case 10 components)
+    all_true_positives : Array of float
+        Array of values for when our classifier accurately predicted the subject was actually hearing music
+
+    '''
     all_accuracies = np.array([])
     all_thresholds = np.array([])
     all_true_positive_percentages = np.array([])

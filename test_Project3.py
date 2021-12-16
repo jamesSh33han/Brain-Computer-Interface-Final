@@ -3,11 +3,11 @@ Created on Tue Nov 30 16:36:55 2021
 
 test_Project3.py
 
-File that calls functions load_data, get_eeg_epochs, get_truth_event_labels, plot_power_spectrum, perform_ICA that are 
+File that calls functions load_data, get_eeg_epochs, get_truth_event_labels, plot_power_spectrum, perform_ICA,
+plot_component_variance, make_prediction, evaluate_predictions, and test_all_components_thresholds that are that are 
 defined in the Project3.py file.
 
 @author: spenc, JJ
-
     
 """
 #%% Import Statements
@@ -37,7 +37,7 @@ is_target_event = Project3.get_event_truth_labels(all_trials)
 
 # Project3.plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_target_event, channels_to_plot, channel_names)
 
-#%% Computing ICA
+#%% Computing ICA and Plotting component variance
 top_n_components = 10
 
 ica = Project3.perform_ICA(fif_file, channel_names, top_n_components)
