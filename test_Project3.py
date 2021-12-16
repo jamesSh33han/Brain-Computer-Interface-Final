@@ -43,7 +43,7 @@ source_activations = Project3.plot_component_variance(ica, components, eeg_epoch
 
 # %% Classification
 
-# Using eye test 
+# Using eye test to test component 2 using a certain threshold
 component = 2
 threshold = 0.0000000017
 predicted_labels = Project3.make_prediction(source_activations, component, is_target_event, threshold)
@@ -51,7 +51,8 @@ predicted_labels = Project3.make_prediction(source_activations, component, is_ta
 truth_labels_binary = is_target_event*1
 accuracy, cm, disp = Project3.evaluate_predictions(predicted_labels, truth_labels_binary)
 disp.plot()
-
+plt.title(f"Confusion Matrix Using Component {component}")
+plt.savefig(f'figures/ConfusionMatrixEyeTest.png')
 
 
 all_accuracies, all_thresholds, all_true_positive_percentages = Project3.test_all_components_thresholds(components, source_activations, is_target_event)
@@ -63,4 +64,7 @@ predicted_labels = Project3.make_prediction(source_activations, component, is_ta
 truth_labels_binary = is_target_event*1
 accuracy, cm, disp = Project3.evaluate_predictions(predicted_labels, truth_labels_binary)
 disp.plot()
+plt.title(f"Confusion Matrix Using Component {component}")
+plt.savefig(f'figures/ConfusionMatrix.png')
+
 

@@ -173,7 +173,7 @@ def perform_ICA(raw_fif_file, channel_names, top_n_components):
     ica.fit(raw_fif_file, picks=picks_eeg, decim=3, reject=dict(mag=4e-12, grad=4000e-13))
     mixing_matrix = ica.mixing_matrix_
     ica.plot_components(picks = np.arange(0,top_n_components))
-    plt.figure('Topo')
+    # plt.figure('Topo')
     plt.savefig(f'figures/Top{top_n_components}ICA.png')
 
     return ica
@@ -215,6 +215,12 @@ def plot_component_variance(ica, components, eeg_epochs, is_target_event):
         
         
         plt.hist([target_activation_vars, nontarget_activation_vars], label=['Perception', 'Imagination'])
+        plt.xlabel('Variance')
+        plt.ylabel('Count')
+        plt.legend()
+        plt.title(f'component {component} variance')
+    plt.tight_layout()
+    plt.savefig(f'figures/TopComponentVariances.png')
     return source_activations
 
 #%% Classification of Target/Nontarget events
@@ -345,19 +351,24 @@ def test_all_components_thresholds(components, source_activations, is_target_eve
     plt.colorbar(label = 'Accuracy (% Correct)', fraction=0.046, pad=0.04)
     plt.xlabel('Threshold Index')
     plt.ylabel('Component')
+    plt.title('All Component/Threshold Accuracies')
 
     plt.subplot(1, 3, 2)
     plt.imshow(all_true_positive_percentages, extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'TP %', fraction=0.046, pad=0.04)
     plt.xlabel('Threshold Index')
     plt.ylabel('Component')
-    
+    plt.title('All Component/Threshold True Positives')
+   
     plt.subplot(1, 3, 3)
     plt.imshow(np.mean(np.array([all_accuracies, all_true_positive_percentages]), axis=0 ), extent = (components[-1], components[0], components[-1], components[0]))
     plt.colorbar(label = 'Average of TP% and Accuracy', fraction=0.046, pad=0.04)
     plt.xlabel('Threshold Index')
     plt.ylabel('Component')
+    plt.title('Average of All Component/Threshold Accuracies and True Positives')
     
     plt.tight_layout()
+    plt.savefig(f'figures/AllMetrics.png')
+
     return all_accuracies, all_thresholds, all_true_positive_percentages
     
