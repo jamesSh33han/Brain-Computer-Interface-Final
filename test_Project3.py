@@ -23,7 +23,11 @@ fif_file, raw_eeg_data, eeg_times, channel_names, fs = Project3.load_data('13')
 
 #%% Epoching the data
 start_time = 0
-# Explanation for end time from person behind experiemnt. A trial epoch (as I used it) starts at a trial onset marker (I used the audio onsets when available). The duration depends on what you want to do. The length of the stimuli is known but it is different for each stimulus. You can either have epochs that correspond to the full audio stimulus but vary in length (e.g. for stimulus reconstruction experiments). Or you can cut of at the length of the shortest stimulus if they need to have the same length (e.g. for stimulus recognition experiments).
+# Explanation for end time from author of experiemnt:
+# A trial epoch (as I used it) starts at a trial onset marker (I used the audio onsets when available). 
+# The duration depends on what you want to do. The length of the stimuli is known but it is different for each stimulus. 
+# You can either have epochs that correspond to the full audio stimulus but vary in length (e.g. for stimulus reconstruction experiments). 
+# Or you can cut of at the length of the shortest stimulus if they need to have the same length (e.g. for stimulus recognition experiments).
 end_time = 7.6
 
 eeg_epochs, epoch_times, all_trials = Project3.get_eeg_epochs(fif_file, raw_eeg_data, start_time, end_time, fs)
@@ -67,4 +71,4 @@ disp.plot()
 plt.title(f"Confusion Matrix Using Component {component}")
 plt.savefig(f'figures/ConfusionMatrix.png')
 
-
+itr_time = Project3.calculate_itr(accuracy, end_time-start_time, is_target_event)

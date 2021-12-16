@@ -297,7 +297,36 @@ def evaluate_predictions(predictions, truth_labels):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     return accuracy, cm, disp
     
-    
+def calculate_itr(accuracy, duration, truth_labels):
+    '''
+    Function that uses the given ITR formula to calculate ITR given an accuracy and trial duration
+
+    Parameters
+    ----------
+    accuracy : float 
+        Float representing the accuracy of our prediction as the proportion of correctly predicted trials divided by total number of trials.
+    duration : float
+        Float representing the time window we are using for epoching data.
+    truth_labels : Array of length (trials)
+        Array holding the truth labels for each trial. truth_labels[i] would indicate wheather trial i is of the lower or higher frequency.
+
+
+    Returns
+    -------
+    itr_time : float
+        Float which is the ITR in bits per second for the given accuracy and trial duration.
+
+    '''
+    # calculate the number of classes present in our data - it will be the number of unique truth labels
+    n = len(np.unique(truth_labels))
+    p = accuracy
+    # use itr formula given, if accuracy = 1, ITR blows up, set equal to 1
+    if p == 1: 
+        itr_trial=1
+    else:
+        itr_trial = np.log2(n) + p*np.log2(p) + (1-p) * np.log2((1-p)/(n-1))
+    itr_time = itr_trial*(1/duration)
+    return itr_time   
 
 def test_all_components_thresholds(components, source_activations, is_target_event):
     '''
