@@ -12,7 +12,7 @@ target/nontarget epochs, defines truth event labels from the epoched data (targe
 nontarget = participant imagined music), computes ICA on the pre-processed EEG data, plots component maps and source activity
 from ICA results, generates a list of predicted Target/Nontarget labels that are classified by using the variance of source 
 activations from a given component as features, compare predicted labels to truth labels to generate a confusion matrix, and
-compare classification accuracy across an array of different thresholds.
+compare classification accuracy across an array of different thresholds. Also calculates ITR given an accuracy and trial duration
 
 @author: spenc, JJ
 """

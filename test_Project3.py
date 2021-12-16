@@ -4,8 +4,8 @@ Created on Tue Nov 30 16:36:55 2021
 test_Project3.py
 
 File that calls functions load_data, get_eeg_epochs, get_truth_event_labels, plot_power_spectrum, perform_ICA,
-plot_component_variance, make_prediction, evaluate_predictions, and test_all_components_thresholds that are that are 
-defined in the Project3.py file.
+plot_component_variance, make_prediction, evaluate_predictions, test_all_components_thresholds, make_prediction, 
+evaluate_predictions, and calculate_itr that are that are defined in the Project3.py file.
 
 @author: spenc, JJ
     
@@ -71,4 +71,5 @@ disp.plot()
 plt.title(f"Confusion Matrix Using Component {component}")
 plt.savefig(f'figures/ConfusionMatrix.png')
 
+#%% Calculating ITR
 itr_time = Project3.calculate_itr(accuracy, end_time-start_time, is_target_event)
